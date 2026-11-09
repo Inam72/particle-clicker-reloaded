@@ -41,7 +41,10 @@ files. Pick one of the options below.
    **/ (root)**, then click **Save**.
 5. Wait a minute or two and refresh the page. Your link appears at the
    top, in the form `https://<your-username>.github.io/particle-clicker-reloaded/`.
-   Share that link with your students.
+   Share that link with your students. Multiplayer also requires the
+   `.mjs` file to be served as JavaScript (`text/javascript`); if the
+   module fails to load, check the deployed file's `Content-Type` or use
+   Netlify, which applies the included header rule.
 
 ### Option 2: Netlify (free)
 
@@ -72,7 +75,9 @@ internet the small icons in the menus are not shown.
 ### Good to know for classrooms
 
 - Each student's progress is saved in their own browser on their own
-  device. Nothing is sent to you or to anyone else.
+  device. The game does not use Google Analytics or upload save data.
+  Multiplayer shares each player's name, selected stat, goal and current
+  progress with peers; public Nostr relays help establish those connections.
 - Students can move their progress between devices with
   **Saved → Export save** and **Import save**.
 - For multiplayer, every player needs to be online at the same time.
