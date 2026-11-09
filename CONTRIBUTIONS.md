@@ -19,7 +19,7 @@ Repository: https://github.com/Inam72/particle-clicker-reloaded
 | Saves | Export your save to a file and import it again on another device or browser. |
 | Learning content | Info buttons on 28 upgrades explaining the physics; Research pages link to each other. |
 | Visual progression | The detector changes colour as you unlock bigger colliders (SPS, Tevatron, LHC, LHCb). |
-| Hosting | Runs on any static host (Netlify config included); all core libraries vendored locally. |
+| Hosting | Runs on static hosts (Netlify config included); core JavaScript libraries are vendored locally, while Font Awesome icons load from a CDN. |
 | Bug fixes | Upgrade purchases showed a positive funding change; auto-save restored; several smaller fixes. |
 
 ---
@@ -57,6 +57,8 @@ Repository: https://github.com/Inam72/particle-clicker-reloaded
 
 ### Hosting and project setup
 - jQuery, AngularJS and Bootstrap JS vendored under `js/external/` instead of loaded from old CDNs; protocol-relative URLs switched to `https://`.
+- Font Awesome remains a CDN dependency, so its icons are not available without an internet connection.
+- Removed the Google Analytics loader so classroom sessions are not sent to Google for tracking.
 - `netlify.toml` for one-step Netlify deploys, including a content-type rule so the multiplayer module always loads.
 - `README.md`: how to run locally and how multiplayer works. New `CONTRIBUTING.md` with the branch and pull-request workflow.
 - Removed the expired "CERN 60 computing challenge" banner and the dead Google+ share link.

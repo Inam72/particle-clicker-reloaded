@@ -24,6 +24,8 @@
   var setTheme = function(dark) {
     document.documentElement.classList.toggle('dark-theme', dark);
     $('#theme-toggle i').attr('class', dark ? 'fa fa-sun-o' : 'fa fa-moon-o');
+    $('#theme-toggle-label').text(dark ? 'Light mode' : 'Dark mode');
+    $('#theme-toggle').attr('title', dark ? 'Switch to light mode' : 'Switch to dark mode');
     detector.setBackground(dark ? DETECTOR_DARK_BG : '#FFFFFF');
   };
   setTheme(document.documentElement.classList.contains('dark-theme'));
@@ -265,7 +267,61 @@
       } catch (err) {
         data = null;
       }
-      if (!data || typeof data !== 'object' || !data.lab) {
+      var isSafeSave = function(save) {
+        if (!save || typeof save !== 'object' || Array.isArray(save) ||
+            (save.saveVersion !== undefined && save.saveVersion !== '1.0')) {
+          return false;
+        }
+        var objectKeys = Object.keys(save);
+        for (var i = 0; i < objectKeys.length; i++) {
+          var key = objectKeys[i];
+          if (key === '__proto__' || key === 'constructor' || key === 'prototype') {
+            return false;
+          }
+          if (key === 'saveVersion') {
+            continue;
+          }
+          if (!Object.prototype.hasOwnProperty.call(allObjects, key)) {
+            return false;
+          }
+          var importedState = save[key];
+          var currentState = allObjects[key].state;
+          if (!importedState || typeof importedState !== 'object' ||
+              Array.isArray(importedState)) {
+            return false;
+          }
+          var stateKeys = Object.keys(importedState);
+          for (var j = 0; j < stateKeys.length; j++) {
+            var stateKey = stateKeys[j];
+            if (stateKey === '__proto__' || stateKey === 'constructor' ||
+                stateKey === 'prototype' ||
+                !Object.prototype.hasOwnProperty.call(currentState, stateKey)) {
+              return false;
+            }
+            var value = importedState[stateKey];
+            var expected = currentState[stateKey];
+            if (stateKey === 'info_levels') {
+              if (!Array.isArray(value) || value.some(function(level) {
+                return typeof level !== 'number' || !isFinite(level);
+              })) {
+                return false;
+              }
+            } else if (expected === null) {
+              if (value !== null && (typeof value !== 'number' || !isFinite(value))) {
+                return false;
+              }
+            } else if (typeof expected === 'number') {
+              if (typeof value !== 'number' || !isFinite(value)) {
+                return false;
+              }
+            } else if (typeof value !== typeof expected) {
+              return false;
+            }
+          }
+        }
+        return Object.prototype.hasOwnProperty.call(save, 'lab');
+      };
+      if (!isSafeSave(data)) {
         window.alert('This is not a valid Particle Clicker save file.');
         return;
       }
@@ -275,7 +331,9 @@
         return;
       }
       savingDisabled = true;
-      for (var key in data) {
+      var importKeys = Object.keys(data);
+      for (var i = 0; i < importKeys.length; i++) {
+        var key = importKeys[i];
         if (key === 'saveVersion') {
           continue;
         }
@@ -316,6 +374,9 @@
       var settings = Multiplayer.getSettings();
       self.waitingForSettings = !settings;
       if (settings) {
+        $timeout.cancel(slowJoinTimer);
+        slowJoinTimer = null;
+        self.slowJoin = false;
         self.statLabel = self.statLabels[settings.statKey] || settings.statKey;
         self.goal = settings.goal;
       }
@@ -329,12 +390,22 @@
       }
     };
     Multiplayer.setOnUpdate(refresh);
+    Multiplayer.setOnError(function(message) {
+      self.error = message;
+      self.inRoom = false;
+      self.waitingForSettings = false;
+      if (!$scope.$root.$$phase) {
+        $scope.$apply();
+      }
+    });
 
     this.createRoom = function() {
       this.error = '';
-      Multiplayer.create(this.name.trim(), this.statKey, this.goal, function() {
+      if (!Multiplayer.create(this.name.trim(), this.statKey, this.goal, function() {
         return lab.state[self.statKey];
-      });
+      })) {
+        return;
+      }
       this.inRoom = true;
       this.roomId = Multiplayer.getRoomId();
       refresh();
@@ -342,10 +413,12 @@
 
     this.joinRoom = function() {
       this.error = '';
-      Multiplayer.join(this.name.trim(), this.joinCode.trim().toUpperCase(), function() {
+      if (!Multiplayer.join(this.name.trim(), this.joinCode.trim().toUpperCase(), function() {
         var settings = Multiplayer.getSettings();
         return settings ? lab.state[settings.statKey] : 0;
-      });
+      })) {
+        return;
+      }
       this.inRoom = true;
       this.roomId = Multiplayer.getRoomId();
       this.slowJoin = false;

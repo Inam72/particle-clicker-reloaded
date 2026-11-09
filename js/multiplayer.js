@@ -11,6 +11,8 @@
 var Multiplayer = (function() {
   var APP_ID = 'particle-clicker-cern-webfest';
   var BROADCAST_INTERVAL_MS = 2000;
+  var MAX_PLAYER_NAME_LENGTH = 20;
+  var MAX_PLAYER_VALUE = 1e100;
 
   var room = null;
   var progressAction = null;
@@ -29,6 +31,7 @@ var Multiplayer = (function() {
   // Without a goal it's a plain leaderboard of each player's total.
   var baseline = null;
   var onUpdate = function() {};
+  var onError = function() {};
 
   var currentValue = function() {
     var value = getValue();
@@ -60,21 +63,37 @@ var Multiplayer = (function() {
   };
 
   var setup = function(code, name, valueGetter) {
+    if (!window.__trystero ||
+        typeof window.__trystero.joinRoom !== 'function') {
+      onError('Multiplayer could not load. Check your connection and reload the page.');
+      return false;
+    }
     roomId = code;
-    selfName = name;
+    selfName = name.slice(0, MAX_PLAYER_NAME_LENGTH);
     getValue = valueGetter;
     startTime = new Date().getTime();
     players = {};
     baseline = null;
 
-    room = window.__trystero.joinRoom({ appId: APP_ID }, roomId);
+    try {
+      room = window.__trystero.joinRoom({ appId: APP_ID }, roomId);
+    } catch (error) {
+      room = null;
+      onError('Could not start multiplayer. Please try again.');
+      return false;
+    }
 
     progressAction = room.makeAction('progress');
     progressAction.onMessage = function(data, meta) {
+      if (!data || typeof data.name !== 'string' ||
+          typeof data.value !== 'number' || !isFinite(data.value)) {
+        return;
+      }
       players[meta.peerId] = {
-        name: data.name,
-        value: data.value,
-        finishedAt: data.finishedAt,
+        name: data.name.slice(0, MAX_PLAYER_NAME_LENGTH),
+        value: Math.max(0, Math.min(data.value, MAX_PLAYER_VALUE)),
+        finishedAt: typeof data.finishedAt === 'number' &&
+          isFinite(data.finishedAt) && data.finishedAt >= 0 ? data.finishedAt : null,
         isSelf: false
       };
       onUpdate();
@@ -100,19 +119,23 @@ var Multiplayer = (function() {
     };
 
     intervalHandle = window.setInterval(broadcast, BROADCAST_INTERVAL_MS);
+    return true;
   };
 
   var create = function(name, statKey, goal, valueGetter) {
     isHost = true;
     settings = { statKey: statKey, goal: goal || null };
-    setup(makeRoomId(), name, valueGetter);
-    broadcast();
+    if (setup(makeRoomId(), name, valueGetter)) {
+      broadcast();
+      return true;
+    }
+    return false;
   };
 
   var join = function(name, code, valueGetter) {
     isHost = false;
     settings = null;
-    setup(code, name, valueGetter);
+    return setup(code, name, valueGetter);
   };
 
   var leave = function() {
@@ -155,6 +178,7 @@ var Multiplayer = (function() {
     getSettings: function() { return settings; },
     getRoomId: function() { return roomId; },
     isInRoom: function() { return !!room; },
-    setOnUpdate: function(fn) { onUpdate = fn; }
+    setOnUpdate: function(fn) { onUpdate = fn; },
+    setOnError: function(fn) { onError = fn; }
   };
 })();
