@@ -517,3 +517,17 @@ html.dark-theme .text-danger {
 html.dark-theme .text-warning {
   color: #f0c36d;
 }
+
+.classroom-qr {
+  display: inline-block;
+  margin: 8px auto;
+  padding: 10px;
+  background: #fff;
+  border: 1px solid #ddd;
+}
+
+.classroom-qr svg {
+  display: block;
+  width: min(60vw, 260px);
+  height: auto;
+}

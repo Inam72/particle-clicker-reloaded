@@ -276,8 +276,19 @@
           </div>
           <div class="modal-body">
             <p class="small text-muted">
-              Play against friends in real time &mdash; no account or server involved, everyone's browser talks directly to everyone else's. That means everyone needs to have the game open at the same time to see each other.
+              Play together: one person creates a room and shares the code. Everyone else enters it to join. Keep the game open while you play. No account is needed. Your saved game stays on your device; other players see your name and chosen score.
             </p>
+            <p class="small text-info" ng-if="mc.localMode">
+              Classroom game: everyone must be on the same Wi-Fi as the teacher's computer.
+            </p>
+            <div class="alert alert-info" ng-if="mc.isTeacher">
+              <p><strong>Teacher controls</strong></p>
+              <p class="small">Students scan the room QR code below to open this game with the room code filled in.</p>
+              <button type="button" class="btn btn-danger btn-sm" ng-click="mc.stopClassroom()" ng-disabled="mc.hostStopped">
+                {{ mc.hostStopped ? 'Classroom stopped' : 'Stop classroom and close Wi-Fi access' }}
+              </button>
+              <p class="small text-danger" ng-show="mc.stopError">{{ mc.stopError }}</p>
+            </div>
 
             <div ng-if="!mc.inRoom">
               <div class="form-group">
@@ -287,20 +298,20 @@
 
               <hr>
 
-              <h5>Start a room</h5>
+              <h5>Start a game</h5>
               <div class="form-group">
-                <label>Compete on</label>
+                <label>Choose a score to compare</label>
                 <select class="form-control" ng-model="mc.statKey" ng-options="key as label for (key, label) in mc.statLabels"></select>
               </div>
               <div class="form-group">
-                <label>Goal <span class="text-muted">(optional &mdash; leave blank for an open-ended leaderboard)</span></label>
+                <label>Race goal <span class="text-muted">(optional &mdash; leave blank to compare scores)</span></label>
                 <input type="number" class="form-control" ng-model="mc.goal" min="1" placeholder="e.g. 1000">
               </div>
-              <button class="btn btn-primary" ng-disabled="!mc.name" ng-click="mc.createRoom()"><i class="fa fa-plus"></i> Create room</button>
+              <button class="btn btn-primary" ng-disabled="!mc.name" ng-click="mc.createRoom()"><i class="fa fa-plus"></i> Create room and get a code</button>
 
               <hr>
 
-              <h5>Join a room</h5>
+              <h5>Join a friend's game</h5>
               <div class="form-group">
                 <label>Room code</label>
                 <input type="text" class="form-control" ng-model="mc.joinCode" maxlength="8" placeholder="e.g. AB12CD">
@@ -312,15 +323,22 @@
 
             <div ng-if="mc.inRoom">
               <p>
-                Room code: <strong>{{ mc.roomId }}</strong>
-                <span ng-show="mc.waitingForSettings" class="text-muted"> &mdash; waiting for room info&hellip;</span>
+                Share this code with friends: <strong>{{ mc.roomId }}</strong>
+                <span ng-show="mc.waitingForSettings" class="text-muted"> &mdash; joining game&hellip;</span>
               </p>
+              <div class="text-center" ng-if="mc.localMode && mc.inRoom">
+                <p class="small">Scan this code to open the game and fill in the room code.</p>
+                <div id="classroom-qr" class="classroom-qr" aria-label="Classroom join QR code"></div>
+                <p class="small"><a ng-href="{{ mc.joinUrl }}">{{ mc.joinUrl }}</a></p>
+                <p class="small text-muted">This code contains your classroom Wi-Fi address and room code. It is made on this computer; it is not sent to an online QR-code service. Share it only with your class.</p>
+              </div>
               <p class="small text-warning" ng-show="mc.waitingForSettings && mc.slowJoin">
-                Still connecting. Check the room code is right and that the person who created the room still has the game open.
+                Still joining. Check the code and make sure the person who started the game still has it open.
               </p>
+              <p class="small text-danger" ng-show="mc.error">{{ mc.error }}</p>
               <p class="small text-muted" ng-hide="mc.waitingForSettings">
-                <span ng-if="mc.goal">First to gain <strong>{{ mc.goal | niceNumber }} {{ mc.statLabel }}</strong> after joining wins.</span>
-                <span ng-if="!mc.goal">No goal set &mdash; comparing {{ mc.statLabel }}.</span>
+                <span ng-if="mc.goal">First to earn <strong>{{ mc.goal | niceNumber }} {{ mc.statLabel }}</strong> after joining wins.</span>
+                <span ng-if="!mc.goal">Comparing everyone's {{ mc.statLabel }}.</span>
               </p>
 
               <table class="table" ng-hide="mc.waitingForSettings">
@@ -394,7 +412,9 @@
     <script src="js/external/jquery.cookie-1.4.1.min.js"></script>
     <script src="js/external/retina.js"></script>
     <script src="js/external/fastclick.js"></script>
+    <script src="js/external/qrcode-generator-2.0.4.js"></script>
 
+    <script src="classroom-mode.js"></script>
     <!-- Trystero (https://github.com/dmotz/trystero) is only published as an
          ES module, so it's imported here and handed to the rest of the app
          (which is plain scripts) via window.__trystero. Vendored locally as

@@ -5,7 +5,8 @@ An addictive incremental game that teaches players the history of high energy pa
 An upgraded version of [Particle Clicker](https://github.com/particle-clicker/particle-clicker),
 originally developed during the 2014 CERN Webfest over a weekend. This version
 adds a phone-friendly layout, dark mode, physics explanations, save
-export/import and peer-to-peer multiplayer (see [CONTRIBUTIONS.md](CONTRIBUTIONS.md)).
+export/import, online multiplayer and an optional Windows classroom host
+(see [CONTRIBUTIONS.md](CONTRIBUTIONS.md)).
 
 The original game is at [http://cern.ch/particle-clicker](http://cern.ch/particle-clicker).
 
@@ -21,6 +22,34 @@ python -m http.server 8000
 then visit `http://localhost:8000`. Opening `index.html` directly from disk
 (a `file://` URL) will not work, since the browser blocks the local JSON
 data files from loading that way.
+
+## Run a classroom game (Windows)
+
+The teacher's computer can host the game and a multiplayer room on the
+classroom Wi-Fi. Students need a browser, and no public hosting account is
+required.
+
+1. Download and unzip this repository.
+2. Double-click `Start-Classroom.bat` and approve the Windows permission
+   prompt. The game opens in your browser.
+3. Open **Multiplayer**, enter your name, and choose **Create room and get a
+   code**.
+4. Students scan the on-screen QR code or open its link, enter a name, and
+   join. Everyone must be on the same Wi-Fi network as the teacher's
+   computer.
+5. When finished, choose **Stop classroom and close Wi-Fi access**. The host
+   also stops automatically after two hours and removes its temporary
+   Windows Firewall rule.
+
+The QR code is generated locally and contains the room code and private
+classroom-network address; share it only with your class. Saved games stay
+on each player's device. The classroom host shares only player names and
+multiplayer scores over the local network. School Wi-Fi may prevent devices
+from connecting to one another. The launcher currently supports Windows.
+QR generation uses the bundled
+[`qrcode-generator`](js/external/qrcode-generator-2.0.4.js), distributed
+under the MIT license in
+[`qrcode-generator-LICENSE.txt`](js/external/qrcode-generator-LICENSE.txt).
 
 ## Host it yourself (for schools and clubs)
 
@@ -68,43 +97,49 @@ otherwise multiplayer will not load. Most servers already do this.
 ### Without the internet
 
 For a single classroom computer with no web hosting, use
-[Running locally](#running-locally) above. The game is playable
-offline; only multiplayer needs an internet connection, and without
-internet the small icons in the menus are not shown.
+the [Windows classroom launcher](#run-a-classroom-game-windows) above. The
+game and its classroom multiplayer work without an internet connection.
+When using another offline setup, the small icons in the menus are not
+shown.
 
 ### Good to know for classrooms
 
 - Each student's progress is saved in their own browser on their own
   device. The game does not use Google Analytics or upload save data.
-  Multiplayer shares each player's name, selected stat, goal and current
-  progress with peers; public Nostr relays help establish those connections.
+  Online multiplayer shares each player's name, selected stat, goal and
+  current progress with peers; public Nostr relays help establish those
+  connections. Classroom mode sends those details only over the local Wi-Fi.
 - Students can move their progress between devices with
   **Saved → Export save** and **Import save**.
-- For multiplayer, every player needs to be online at the same time.
+- For online multiplayer, every player needs to be online at the same time.
   Some strict school networks block direct peer-to-peer connections; if
-  students can't join a room, try a different network (for example a
-  phone hotspot) or ask your IT team.
+  students can't join an online room, try a different network or ask your
+  IT team. For classroom mode, students must be on the teacher's Wi-Fi,
+  which must allow devices to connect to each other.
 
 ## Contributing
 
 See [CONTRIBUTING.md](CONTRIBUTING.md). A summary of the changes in this fork is in
 [CONTRIBUTIONS.md](CONTRIBUTIONS.md).
 
-## Multiplayer
+## Online multiplayer
 
-Players can create or join a room to play against each other: either racing
-to be the first to reach a target amount of a chosen stat (reputation, data
-collected, funding collected, or clicks), or with no target set, just
-comparing that stat on a live leaderboard.
+Players on a website can create or join an online room to play against each
+other: either racing to be the first to reach a target amount of a chosen
+stat (reputation, data collected, funding collected, or clicks), or with no
+target set, just comparing that stat on a live leaderboard.
 
-There is no server and no account of any kind, on either end. Each player's
-save stays in their own browser's local storage exactly as before; only
-their name, chosen stat, goal, and current progress are ever sent to other
-players, directly, peer-to-peer over WebRTC. Connections are set up with
-[Trystero](https://github.com/dmotz/trystero) using its `nostr` strategy,
-which uses public [Nostr](https://nostr.com/) relays to exchange the initial
-connection handshake (`js/multiplayer.js`) — there is nothing to configure,
-run, or pay for to make this work, on Netlify or any other static host.
+Online rooms require no game server or account. Each player's save stays in
+their own browser's local storage exactly as before; only their name, chosen
+stat, goal, and current progress are sent to other players. Connections are
+set up peer-to-peer over WebRTC with
+[Trystero](https://github.com/dmotz/trystero)'s `nostr` strategy, which uses
+public [Nostr](https://nostr.com/) relays to exchange the initial connection
+handshake (`js/multiplayer.js`) — there is nothing to configure, run, or pay
+for to make this work on Netlify or any other static host.
+
+The Windows classroom launcher uses a temporary host on the teacher's
+computer instead, and sends game-room messages only over the local Wi-Fi.
 
 Because nothing is stored anywhere except in the browsers that are
 currently playing, a room only exists for as long as at least one of its
