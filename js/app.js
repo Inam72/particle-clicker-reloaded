@@ -360,15 +360,38 @@
       clicks: 'Clicks'
     };
     this.name = '';
+    this.localMode = !!window.__CLASSROOM_LOCAL__;
+    this.isTeacher = !!window.__CLASSROOM_TEACHER__;
+    this.hostStopped = false;
+    this.stopError = '';
     this.statKey = 'reputation';
     this.goal = null;
-    this.joinCode = '';
+    this.joinCode = window.__CLASSROOM_ROOM__ || '';
     this.error = '';
     this.inRoom = false;
     this.waitingForSettings = false;
     this.roomId = '';
     this.statLabel = '';
     this.players = [];
+
+    var updateJoinQr = function() {
+      if (!self.localMode || !self.inRoom || !self.roomId) {
+        return;
+      }
+
+      var joinUrl = window.__CLASSROOM_HOST_URL__ + '#room=' +
+          encodeURIComponent(self.roomId);
+      self.joinUrl = joinUrl;
+      $timeout(function() {
+        var target = document.getElementById('classroom-qr');
+        if (target && window.qrcode) {
+          var qr = window.qrcode(0, 'M');
+          qr.addData(joinUrl);
+          qr.make();
+          target.innerHTML = qr.createSvgTag(5, 8);
+        }
+      });
+    };
 
     var refresh = function() {
       var settings = Multiplayer.getSettings();
@@ -388,12 +411,18 @@
       if (!$scope.$root.$$phase) {
         $scope.$apply();
       }
+      updateJoinQr();
     };
     Multiplayer.setOnUpdate(refresh);
     Multiplayer.setOnError(function(message) {
       self.error = message;
-      self.inRoom = false;
-      self.waitingForSettings = false;
+      if (message) {
+        $timeout.cancel(slowJoinTimer);
+        slowJoinTimer = null;
+        self.inRoom = false;
+        self.waitingForSettings = false;
+        Multiplayer.leave();
+      }
       if (!$scope.$root.$$phase) {
         $scope.$apply();
       }
@@ -409,6 +438,7 @@
       this.inRoom = true;
       this.roomId = Multiplayer.getRoomId();
       refresh();
+      updateJoinQr();
     };
 
     this.joinRoom = function() {
@@ -435,6 +465,34 @@
       this.inRoom = false;
       this.waitingForSettings = false;
       this.players = [];
+    };
+
+    this.stopClassroom = function() {
+      if (!this.isTeacher || this.hostStopped) {
+        return;
+      }
+      this.stopError = '';
+      fetch('/classroom/stop', {
+        method: 'POST',
+        headers: {
+          'X-Classroom-Token': window.__CLASSROOM_STOP_TOKEN__
+        }
+      }).then(function(response) {
+        if (!response.ok) {
+          throw new Error('The classroom could not be stopped. Close the host window instead.');
+        }
+        $timeout(function() {
+          self.hostStopped = true;
+          Multiplayer.leave();
+          self.inRoom = false;
+          self.players = [];
+          self.waitingForSettings = false;
+        });
+      }).catch(function(error) {
+        $timeout(function() {
+          self.stopError = error.message;
+        });
+      });
     };
   }]);
 

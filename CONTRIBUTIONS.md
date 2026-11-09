@@ -13,13 +13,14 @@ Repository: https://github.com/Inam72/particle-clicker-reloaded
 
 | Area | What changed |
 | --- | --- |
-| Multiplayer | New peer-to-peer rooms: race to a goal or compare on a live leaderboard. No server, no accounts. |
+| Multiplayer | Online peer-to-peer rooms plus a Windows classroom mode hosted on the teacher's local network. |
 | Dark mode | Full dark theme with a toggle, remembers the choice, follows the OS setting by default. |
 | Mobile | Portrait phones are now playable (stacked layout) instead of showing a "rotate your device" screen. |
 | Saves | Export your save to a file and import it again on another device or browser. |
 | Learning content | Info buttons on 28 upgrades explaining the physics; Research pages link to each other. |
 | Visual progression | The detector changes colour as you unlock bigger colliders (SPS, Tevatron, LHC, LHCb). |
 | Hosting | Runs on static hosts (Netlify config included); core JavaScript libraries are vendored locally, while Font Awesome icons load from a CDN. |
+| Classroom | Windows launcher hosts the game and local multiplayer rooms on a classroom network; students join with a locally generated QR code. |
 | Bug fixes | Upgrade purchases showed a positive funding change; auto-save restored; several smaller fixes. |
 
 ---
@@ -34,6 +35,12 @@ Repository: https://github.com/Inam72/particle-clicker-reloaded
 - Fully peer-to-peer over WebRTC using [Trystero](https://github.com/dmotz/trystero) (vendored, v0.25.4). Public Nostr relays handle the initial handshake only. Nothing to run, configure or pay for.
 - Only name, stat, goal and progress are shared. Saves never leave the player's browser.
 - If joining takes more than 20 seconds, a hint suggests checking the room code and that the host is still online.
+- The optional Windows classroom launcher (`Start-Classroom.bat`, `Start-Classroom.ps1`, `ClassroomHost.cs`) hosts the game and room messages on the teacher's local network. Students can scan a locally generated QR code to join; no internet hosting or account is required.
+
+### Windows classroom launcher
+- Double-click `Start-Classroom.bat` to start the local host. Windows asks for permission to open access to the local network; the temporary firewall rule is removed when the host stops.
+- The host runs for up to two hours. Teachers can stop it from the multiplayer dialog. Students join from the same Wi-Fi using the displayed QR code or room code.
+- The launcher is Windows-only; online multiplayer remains available on other platforms and hosted copies.
 
 ### Dark mode (`css/style.css`, `index.html`, `js/app.js`, `js/detector.js`)
 - Toggle in the navbar. The choice is saved; with no saved choice, the OS light/dark preference is used.
@@ -57,7 +64,7 @@ Repository: https://github.com/Inam72/particle-clicker-reloaded
 
 ### Hosting and project setup
 - jQuery, AngularJS and Bootstrap JS vendored under `js/external/` instead of loaded from old CDNs; protocol-relative URLs switched to `https://`.
-- Font Awesome remains a CDN dependency, so its icons are not available without an internet connection.
+- Font Awesome remains a CDN dependency for hosted copies; the Windows classroom launcher substitutes a local icon sheet for offline use.
 - Removed the Google Analytics loader so classroom sessions are not sent to Google for tracking.
 - `netlify.toml` for one-step Netlify deploys, including a content-type rule so the multiplayer module always loads.
 - `README.md`: how to run locally and how multiplayer works. New `CONTRIBUTING.md` with the branch and pull-request workflow.

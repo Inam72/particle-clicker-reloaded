@@ -1,0 +1,35 @@
+.fa {
+  display: inline-block;
+  font-family: "Glyphicons Halflings";
+  font-style: normal;
+  font-weight: normal;
+  line-height: 1;
+}
+
+.fa-bar-chart:before { content: "\e185"; }
+.fa-cogs:before { content: "\e019"; }
+.fa-database:before { content: "\e118"; }
+.fa-download:before { content: "\e025"; }
+.fa-exclamation:before { content: "\e101"; }
+.fa-facebook-square:before { content: "f"; font-family: Arial, sans-serif; font-weight: bold; }
+.fa-flag-checkered:before { content: "\e034"; }
+.fa-floppy-o:before,
+.fa-save:before { content: "\e172"; }
+.fa-github:before { content: "G"; font-family: Arial, sans-serif; font-weight: bold; }
+.fa-info:before,
+.fa-info-circle:before { content: "\e086"; }
+.fa-location-arrow:before { content: "\e092"; }
+.fa-money:before { content: "\e148"; }
+.fa-moon-o:before { content: "\e022"; }
+.fa-plus:before { content: "\002b"; }
+.fa-refresh:before { content: "\e031"; }
+.fa-share-alt:before { content: "\e095"; }
+.fa-sign-in:before { content: "\e161"; }
+.fa-sign-out:before { content: "\e163"; }
+.fa-sun-o:before { content: "\e124"; }
+.fa-trophy:before { content: "\e006"; }
+.fa-twitter:before { content: "t"; font-family: Arial, sans-serif; font-weight: bold; }
+.fa-upload:before { content: "\e027"; }
+.fa-user:before,
+.fa-users:before { content: "\e008"; }
+.fa-wrench:before { content: "\e136"; }
